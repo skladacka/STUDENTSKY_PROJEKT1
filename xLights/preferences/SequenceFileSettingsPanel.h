@@ -43,6 +43,7 @@ class SequenceFileSettingsPanel: public wxPanel
 		wxCheckBox* CheckBox_FSEQ;
 		wxCheckBox* CheckBox_LowDefinitionRender;
 		wxCheckBox* CheckBox_RenderCache;
+		wxCheckBox* CheckBox_XSQ;
 		wxCheckBox* FSEQSaveCheckBox;
 		wxCheckBox* RenderOnSaveCheckBox;
 		wxChoice* AutoSaveIntervalChoice;
@@ -53,12 +54,13 @@ class SequenceFileSettingsPanel: public wxPanel
 		wxChoice* ViewDefaultChoice;
 		wxDirPickerCtrl* DirPickerCtrl_FSEQ;
 		wxDirPickerCtrl* DirPickerCtrl_RenderCache;
+		wxDirPickerCtrl* DirPickerCtrl_XSQ;
 		wxListBox* MediaDirectoryList;
 		wxStaticText* StaticText4;
 		wxStaticText* StaticText5;
 		wxStaticText* StaticText6;
 		//*)
-        
+
         virtual bool TransferDataFromWindow() override;
         virtual bool TransferDataToWindow() override;
 
@@ -84,6 +86,8 @@ class SequenceFileSettingsPanel: public wxPanel
 		static const long ID_BUTTON_REMOVE_MEDIA;
 		static const long ID_STATICTEXT2;
 		static const long ID_CHOICE_VIEW_DEFAULT;
+		static const long ID_CHECKBOX4;
+		static const long ID_DIRPICKERCTRL1;
 		//*)
 
 	private:
@@ -99,9 +103,11 @@ class SequenceFileSettingsPanel: public wxPanel
 		void OnCheckBox_RenderCacheClick(wxCommandEvent& event);
 		void OnCheckBox_MediaClick(wxCommandEvent& event);
 		void OnCheckBox_FSEQClick(wxCommandEvent& event);
+		void OnCheckBox_XSQClick(wxCommandEvent& event);
 		void OnDirPickerCtrl_RenderCacheDirChanged(wxFileDirPickerEvent& event);
 		void OnDirPickerCtrl_MediaDirChanged(wxFileDirPickerEvent& event);
 		void OnDirPickerCtrl_FSEQDirChanged(wxFileDirPickerEvent& event);
+		void OnDirPickerCtrl_XSQDirChanged(wxFileDirPickerEvent& event);
 		void OnAddMediaButtonClick(wxCommandEvent& event);
 		void OnRemoveMediaButtonClick(wxCommandEvent& event);
 		void OnMediaDirectoryListSelect(wxCommandEvent& event);

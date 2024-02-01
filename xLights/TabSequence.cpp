@@ -307,8 +307,6 @@ wxString xLightsFrame::LoadEffectsFileNoCheck()
 
     //Load FSEQ and Backup directory settings
     fseqDirectory = GetXmlSetting("fseqDir", showDirectory);
-    renderCacheDirectory = GetXmlSetting("renderCacheDir", fseqDirectory); // we user fseq directory if no setting is present
-    ObtainAccessToURL(renderCacheDirectory);
     ObtainAccessToURL(fseqDirectory);
     if (!wxDir::Exists(fseqDirectory)) {
         logger_base.warn("FSEQ Directory not Found ... switching to Show Directory.");
@@ -317,6 +315,22 @@ wxString xLightsFrame::LoadEffectsFileNoCheck()
         UnsavedRgbEffectsChanges = true;
     }
     FseqDir = fseqDirectory;
+    xsqDirectory = GetXmlSetting("xsqDir", showDirectory);
+    ObtainAccessToURL(xsqDirectory);
+    if (!wxDir::Exists(xsqDirectory)) {
+        logger_base.warn("Sequence XSQ Directory not Found ... switching to Show Directory.");
+        xsqDirectory = showDirectory;
+        SetXmlSetting("xsqDir", showDirectory);
+        UnsavedRgbEffectsChanges = true;
+    }
+    if (xsqDirectory.compare(0, showDirectory.length(), showDirectory) != 0) { // dwe
+        logger_base.warn("Sequence Directory not within the Show Folder ... switching to Show Directory.");
+        xsqDirectory = showDirectory;
+        SetXmlSetting("xsqDir", showDirectory);
+        UnsavedRgbEffectsChanges = true;
+    }
+    renderCacheDirectory = GetXmlSetting("renderCacheDir", fseqDirectory); // we user fseq directory if no setting is present
+    ObtainAccessToURL(renderCacheDirectory);
     if (!wxDir::Exists(renderCacheDirectory)) {
         logger_base.warn("Render Cache Directory not Found ... switching to Show Directory.");
         renderCacheDirectory = showDirectory;
@@ -1283,7 +1297,7 @@ void xLightsFrame::SaveSequence()
 
         wxFileDialog fd(this,
                         "Choose filename to Save Sequence:",
-                        CurrentDir,
+                        xsqDirectory,
                         startname,
                         strSequenceSaveAsFileTypes,
                         wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
@@ -1445,7 +1459,7 @@ void xLightsFrame::SaveAsSequence()
     wxString newFilename;
     wxFileDialog fd(this,
                     "Choose filename to Save Sequence:",
-                    CurrentDir,
+                    xsqDirectory,
                     CurrentSeqXmlFile->GetName(),
                     strSequenceSaveAsFileTypes,
                     wxFD_SAVE | wxFD_OVERWRITE_PROMPT);

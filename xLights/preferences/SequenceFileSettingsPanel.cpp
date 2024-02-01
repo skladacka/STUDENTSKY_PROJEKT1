@@ -46,6 +46,8 @@ const long SequenceFileSettingsPanel::ID_BUTTON_ADDMEDIA = wxNewId();
 const long SequenceFileSettingsPanel::ID_BUTTON_REMOVE_MEDIA = wxNewId();
 const long SequenceFileSettingsPanel::ID_STATICTEXT2 = wxNewId();
 const long SequenceFileSettingsPanel::ID_CHOICE_VIEW_DEFAULT = wxNewId();
+const long SequenceFileSettingsPanel::ID_CHECKBOX4 = wxNewId();
+const long SequenceFileSettingsPanel::ID_DIRPICKERCTRL1 = wxNewId();
 //*)
 
 BEGIN_EVENT_TABLE(SequenceFileSettingsPanel,wxPanel)
@@ -63,6 +65,7 @@ SequenceFileSettingsPanel::SequenceFileSettingsPanel(wxWindow* parent,xLightsFra
 	wxStaticBoxSizer* StaticBoxSizer1;
 	wxStaticBoxSizer* StaticBoxSizer2;
 	wxStaticBoxSizer* StaticBoxSizer3;
+	wxStaticBoxSizer* StaticBoxSizer4;
 	wxStaticText* StaticText1;
 	wxStaticText* StaticText2;
 	wxStaticText* StaticText3;
@@ -165,6 +168,13 @@ SequenceFileSettingsPanel::SequenceFileSettingsPanel(wxWindow* parent,xLightsFra
 	ViewDefaultChoice->SetMinSize(wxSize(200,-1));
 	ViewDefaultChoice->SetToolTip(_("This option is used to select which models will populate the master view when a new sequence is created."));
 	GridBagSizer1->Add(ViewDefaultChoice, wxGBPosition(3, 1), wxDefaultSpan, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+	StaticBoxSizer4 = new wxStaticBoxSizer(wxHORIZONTAL, this, _("Sequence Directory"));
+	CheckBox_XSQ = new wxCheckBox(this, ID_CHECKBOX4, _("Use Show Folder"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX4"));
+	CheckBox_XSQ->SetValue(false);
+	StaticBoxSizer4->Add(CheckBox_XSQ, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	DirPickerCtrl_XSQ = new wxDirPickerCtrl(this, ID_DIRPICKERCTRL1, wxEmptyString, wxEmptyString, wxDefaultPosition, wxSize(400,-1), wxDIRP_DIR_MUST_EXIST|wxDIRP_USE_TEXTCTRL, wxDefaultValidator, _T("ID_DIRPICKERCTRL1"));
+	StaticBoxSizer4->Add(DirPickerCtrl_XSQ, 1, wxALL|wxEXPAND, 5);
+	GridBagSizer1->Add(StaticBoxSizer4, wxGBPosition(11, 0), wxGBSpan(1, 2), wxALL|wxALIGN_LEFT|wxALIGN_TOP, 5);
 	SetSizer(GridBagSizer1);
 	GridBagSizer1->Fit(this);
 	GridBagSizer1->SetSizeHints(this);
@@ -185,6 +195,8 @@ SequenceFileSettingsPanel::SequenceFileSettingsPanel(wxWindow* parent,xLightsFra
 	Connect(ID_BUTTON_ADDMEDIA,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&SequenceFileSettingsPanel::OnAddMediaButtonClick);
 	Connect(ID_BUTTON_REMOVE_MEDIA,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&SequenceFileSettingsPanel::OnRemoveMediaButtonClick);
 	Connect(ID_CHOICE_VIEW_DEFAULT,wxEVT_COMMAND_CHOICE_SELECTED,(wxObjectEventFunction)&SequenceFileSettingsPanel::OnViewDefaultChoiceSelect);
+	Connect(ID_CHECKBOX4,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&SequenceFileSettingsPanel::OnCheckBox_XSQClick);
+	Connect(ID_DIRPICKERCTRL1,wxEVT_COMMAND_DIRPICKER_CHANGED,(wxObjectEventFunction)&SequenceFileSettingsPanel::OnDirPickerCtrl_XSQDirChanged);
 	//*)
 
 	GridBagSizer1->Fit(this);
@@ -240,6 +252,7 @@ bool SequenceFileSettingsPanel::TransferDataFromWindow() {
     frame->SetMediaFolders(mediaFolders);
 
     frame->SetFSEQFolder(CheckBox_FSEQ->GetValue(), DirPickerCtrl_FSEQ->GetPath());
+    frame->SetXSQFolder(CheckBox_XSQ->GetValue(), DirPickerCtrl_XSQ->GetPath());
     frame->SetRenderCacheFolder(CheckBox_RenderCache->GetValue(), DirPickerCtrl_RenderCache->GetPath());
 
     frame->SetDefaultSeqView(ViewDefaultChoice->GetStringSelection());
@@ -315,7 +328,7 @@ bool SequenceFileSettingsPanel::TransferDataToWindow() {
     RenderCacheChoice->SetStringSelection(rc);
     FSEQSaveCheckBox->SetValue(frame->SaveFseqOnSave());
     RenderOnSaveCheckBox->SetValue(frame->RenderOnSave());
-    
+
     ModelBlendDefaultChoice->SetSelection(frame->ModelBlendDefaultOff());
     switch (frame->AutoSaveInterval()) {
         case 30:
@@ -344,6 +357,10 @@ bool SequenceFileSettingsPanel::TransferDataToWindow() {
     frame->GetFSEQFolder(cb, folder);
     CheckBox_FSEQ->SetValue(cb);
     DirPickerCtrl_FSEQ->SetPath(folder);
+
+    frame->GetXSQFolder(cb, folder);
+    CheckBox_XSQ->SetValue(cb);
+    DirPickerCtrl_XSQ->SetPath(folder);
 
 
     folder = frame->GetShowDirectory();
@@ -419,6 +436,9 @@ void SequenceFileSettingsPanel::OnRenderModeChoiceSelect(wxCommandEvent& event)
 bool SequenceFileSettingsPanel::ValidateWindow()
 {
     bool res = true;
+    std::string showfolder;
+    showfolder = frame->GetShowDirectory();
+
     RemoveMediaButton->Enable(MediaDirectoryList->GetSelection() != wxNOT_FOUND);
 
     if (CheckBox_FSEQ->GetValue()) {
@@ -428,11 +448,28 @@ bool SequenceFileSettingsPanel::ValidateWindow()
         DirPickerCtrl_FSEQ->Enable(true);
     }
 
+    if (CheckBox_XSQ->GetValue()) {
+        DirPickerCtrl_XSQ->Enable(false);
+    } else {
+        if (!wxDir::Exists(DirPickerCtrl_XSQ->GetPath()))
+            res = false;
+        DirPickerCtrl_XSQ->Enable(true);
+    }
+
     if (CheckBox_RenderCache->GetValue()) {
         DirPickerCtrl_RenderCache->Enable(false);
     } else {
         if (!wxDir::Exists(DirPickerCtrl_RenderCache->GetPath())) res = false;
         DirPickerCtrl_RenderCache->Enable(true);
+    }
+
+    if (DirPickerCtrl_XSQ->GetPath().compare(0, showfolder.length(), showfolder)) { // dwe
+        wxMessageDialog msgDlg(this, "Sequence Directory not within the Show Folder", "Error", wxOK | wxCENTRE);
+        msgDlg.ShowModal();
+        res = false;
+        DirPickerCtrl_XSQ->Enable(false);
+        CheckBox_XSQ->SetValue(true);
+        DirPickerCtrl_XSQ->SetPath(showfolder);
     }
 
     return res;
@@ -477,6 +514,14 @@ void SequenceFileSettingsPanel::OnDirPickerCtrl_MediaDirChanged(wxFileDirPickerE
 
 void SequenceFileSettingsPanel::OnDirPickerCtrl_FSEQDirChanged(wxFileDirPickerEvent& event)
 {
+    if (wxPreferencesEditor::ShouldApplyChangesImmediately()) {
+        TransferDataFromWindow();
+    }
+}
+
+void SequenceFileSettingsPanel::OnDirPickerCtrl_XSQDirChanged(wxFileDirPickerEvent& event)
+{
+    ValidateWindow();
     if (wxPreferencesEditor::ShouldApplyChangesImmediately()) {
         TransferDataFromWindow();
     }
@@ -536,6 +581,14 @@ void SequenceFileSettingsPanel::OnCheckBox_LowDefinitionRenderClick(wxCommandEve
 
 void SequenceFileSettingsPanel::OnChoice_MaximumRenderCacheSelect(wxCommandEvent& event)
 {
+    if (wxPreferencesEditor::ShouldApplyChangesImmediately()) {
+        TransferDataFromWindow();
+    }
+}
+
+void SequenceFileSettingsPanel::OnCheckBox_XSQClick(wxCommandEvent& event)
+{
+    ValidateWindow();
     if (wxPreferencesEditor::ShouldApplyChangesImmediately()) {
         TransferDataFromWindow();
     }
